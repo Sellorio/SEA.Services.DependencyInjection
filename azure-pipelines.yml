@@ -27,7 +27,7 @@ steps:
     packagesToPack: 'SEA.DependencyInjection/SEA.DependencyInjection.csproj'
     packDestination: 'SEA.DependencyInjection'
     versioningScheme: 'byEnvVar'
-    versionEnvVar: $(version)
+    versionEnvVar: 'version'
 - task: NuGetCommand@2
   inputs:
     command: 'push'
