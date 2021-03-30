@@ -7,13 +7,30 @@ trigger:
 - master
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: windows-latest
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- task: NuGetToolInstaller@1
+  inputs:
+    versionSpec: 
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: 'SEA.DependencyInjection/SEA.DependencyInjection.csproj'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'test'
+    projects: 'SEA.DependencyInjection.Tests/SEA.DependencyInjection.Tests.csproj'
+- task: NuGetCommand@2
+  inputs:
+    command: 'pack'
+    packagesToPack: 'SEA.DependencyInjection/SEA.DependencyInjection.csproj'
+    packDestination: 'SEA.DependencyInjection'
+    versioningScheme: 'byEnvVar'
+    versionEnvVar: '$VERSION'
+- task: NuGetCommand@2
+  inputs:
+    command: 'push'
+    packagesToPush: '**/*.nupkg'
+    nuGetFeedType: 'external'
+    publishFeedCredentials: 'NuGet'
