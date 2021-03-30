@@ -29,11 +29,11 @@ namespace SEA.DependencyInjection.Reflection
 
         private static IEnumerable<PropertyInfo> GetDependencyProperties(Type type)
         {
-            var result = type.GetProperties().Where(x => x.IsInitSetProperty());
+            var result = type.GetProperties().Where(x => x.IsInitSetProperty() && x.GetCustomAttribute<NotInjectedAttribute>() == null);
 
             if (type.BaseType != null)
             {
-                result = GetDependencyProperties(type).Concat(result);
+                result = GetDependencyProperties(type.BaseType).Concat(result);
             }
 
             return result;

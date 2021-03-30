@@ -1,6 +1,5 @@
 ﻿using SEA.DependencyInjection.Configuration;
 using SEA.DependencyInjection.Reflection;
-using SEA.DependencyInjection.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,42 +8,18 @@ namespace SEA.DependencyInjection.Engine
 {
     internal static class DependencyResolveHelper
     {
-        internal static TObject ResolveObject<TObject>(
-            IDependencyResolver dependencyResolver,
-            DependencyResolutionSettings settings,
-            Cache<ServiceInfo, ServiceInstance> singletonServiceCache,
-            Cache<ServiceInfo, ServiceInstance> scopedServiceCache,
-            Cache<Type, ServiceTypeInfo> autoDetectedServiceInfoCache)
+        internal static TObject ResolveObject<TObject>(ResolutionContext resolutionContext)
         {
-            return
-                (TObject)ResolveObject(
-                    typeof(TObject),
-                    dependencyResolver,
-                    settings,
-                    singletonServiceCache,
-                    scopedServiceCache,
-                    autoDetectedServiceInfoCache);
+            return (TObject)ResolveObject(typeof(TObject), resolutionContext);
         }
 
-        internal static object ResolveObject(
-            Type type,
-            IDependencyResolver dependencyResolver,
-            DependencyResolutionSettings settings,
-            Cache<ServiceInfo, ServiceInstance> singletonServiceCache,
-            Cache<ServiceInfo, ServiceInstance> scopedServiceCache,
-            Cache<Type, ServiceTypeInfo> autoDetectedServiceInfoCache)
+        internal static object ResolveObject(Type type, ResolutionContext resolutionContext)
         {
             return
                 ResolveObject(
                     type,
-                    dependencyResolver,
-                    settings,
-                    singletonServiceCache,
-                    scopedServiceCache,
-                    autoDetectedServiceInfoCache,
-                    scopedServiceCache == null
-                        ? new[] { ServiceScope.Singleton, ServiceScope.Transient }
-                        : new[] { ServiceScope.Singleton, ServiceScope.Scoped, ServiceScope.Transient },
+                    resolutionContext,
+                    resolutionContext.ScopedServiceCache == null ? ServiceScope.Singleton : ServiceScope.Scoped,
                     Enumerable.Empty<Type>());
         }
 
@@ -63,28 +38,27 @@ namespace SEA.DependencyInjection.Engine
             return instance;
         }
 
-        private static object ResolveObject(
-            Type type,
-            IDependencyResolver dependencyResolver,
-            DependencyResolutionSettings settings,
-            Cache<ServiceInfo, ServiceInstance> singletonServiceCache,
-            Cache<ServiceInfo, ServiceInstance> scopedServiceCache,
-            Cache<Type, ServiceTypeInfo> autoDetectedServiceInfoCache,
-            ServiceScope[] permittedScopes,
-            IEnumerable<Type> typeResolutionChain)
+        private static object ResolveObject(Type type, ResolutionContext resolutionContext, ServiceScope ownerScope, IEnumerable<Type> typeResolutionChain)
         {
-            var serviceInfo = settings.Services.FirstOrDefault(x => x.ServiceType == type);
+            var serviceInfo = resolutionContext.Settings.Services.FirstOrDefault(x => x.ServiceType == type);
 
             if (serviceInfo == null)
             {
-                throw new InvalidOperationException(
-                    $"There is no service configured for the type {type.Name}.");
+                if (!resolutionContext.Settings.IsServiceAutoDetectionEnabled)
+                {
+                    throw new InvalidOperationException(
+                        $"There is no service configured for the type {type.Name}.");
+                }
+
+                serviceInfo =
+                    resolutionContext.AutoDetectedServiceInfoCache.GetOrLoad(
+                        type,
+                        () => AutoDetectedServiceInfo.Find(type, ownerScope, resolutionContext.Settings));
             }
 
-            if (!permittedScopes.Contains(serviceInfo.Scope))
+            if (ownerScope == ServiceScope.Singleton && serviceInfo.Scope == ServiceScope.Scoped)
             {
-                throw new InvalidOperationException(
-                    $"{type.Name} could not be injected since only {string.Join("/", permittedScopes)} are allowed in this context.");
+                throw new InvalidOperationException($"Attempted to inject {serviceInfo.ServiceType.Name} (a scoped service) in a singleton.");
             }
 
             if (typeResolutionChain.Contains(type))
@@ -96,30 +70,23 @@ namespace SEA.DependencyInjection.Engine
             if (serviceInfo.Scope == ServiceScope.Singleton)
             {
                 return
-                    singletonServiceCache.GetOrLoad(
+                    resolutionContext.SingletonServiceCache.GetOrLoad(
                         serviceInfo,
-                        () => CreateInstance(serviceInfo, dependencyResolver, settings, singletonServiceCache, scopedServiceCache, autoDetectedServiceInfoCache, typeResolutionChain));
+                        () => CreateInstance(serviceInfo, resolutionContext, ServiceScope.Singleton, typeResolutionChain)).Instance;
             }
 
             if (serviceInfo.Scope == ServiceScope.Scoped)
             {
                 return
-                    scopedServiceCache.GetOrLoad(
+                    resolutionContext.ScopedServiceCache.GetOrLoad(
                         serviceInfo,
-                        () => CreateInstance(serviceInfo, dependencyResolver, settings, singletonServiceCache, scopedServiceCache, autoDetectedServiceInfoCache, typeResolutionChain));
+                        () => CreateInstance(serviceInfo, resolutionContext, ServiceScope.Scoped, typeResolutionChain)).Instance;
             }
 
-            return CreateInstance(serviceInfo, dependencyResolver, settings, singletonServiceCache, scopedServiceCache, autoDetectedServiceInfoCache, typeResolutionChain);
+            return CreateInstance(serviceInfo, resolutionContext, ownerScope, typeResolutionChain).Instance;
         }
 
-        private static ServiceInstance CreateInstance(
-            ServiceInfo serviceInfo,
-            IDependencyResolver dependencyResolver,
-            DependencyResolutionSettings settings,
-            Cache<ServiceInfo, ServiceInstance> singletonServiceCache,
-            Cache<ServiceInfo, ServiceInstance> scopedServiceCache,
-            Cache<Type, ServiceTypeInfo> autoDetectedServiceInfoCache,
-            IEnumerable<Type> typeResolutionChain)
+        private static ServiceInstance CreateInstance(ServiceInfo serviceInfo, ResolutionContext resolutionContext, ServiceScope ownerScope, IEnumerable<Type> typeResolutionChain)
         {
             if (serviceInfo.Instance != null)
             {
@@ -128,22 +95,14 @@ namespace SEA.DependencyInjection.Engine
 
             if (serviceInfo.CreationFunction != null)
             {
-                return new ServiceInstance(serviceInfo, serviceInfo.CreationFunction.Invoke(dependencyResolver));
+                return new ServiceInstance(serviceInfo, serviceInfo.CreationFunction.Invoke(resolutionContext.DependencyResolver));
             }
 
             var implementationTypeInfo = serviceInfo.ImplementationTypeInfo;
-
-            if (implementationTypeInfo == null)
-            {
-                implementationTypeInfo = autoDetectedServiceInfoCache.GetOrLoad(serviceInfo.ServiceType, () => AutoDetectedServiceInfo.Find(serviceInfo.ServiceType, settings));
-            }
-
             var newTypeResolutionChain = typeResolutionChain.Append(serviceInfo.ServiceType);
-            var greaterOrEqualScopes = typeof(ServiceScope).GetEnumValues().Cast<ServiceScope>().Where(x => (int)x >= (int)serviceInfo.Scope).ToArray();
             var dependencies =
                 implementationTypeInfo.DependencyProperties
-                    .Select(x =>
-                        ResolveObject(x.PropertyType, dependencyResolver, settings, singletonServiceCache, scopedServiceCache, autoDetectedServiceInfoCache, greaterOrEqualScopes, newTypeResolutionChain))
+                    .Select(x => ResolveObject(x.PropertyType, resolutionContext, ownerScope, newTypeResolutionChain))
                     .ToArray();
 
             var rawInstance = Activator.CreateInstance(implementationTypeInfo.Type);

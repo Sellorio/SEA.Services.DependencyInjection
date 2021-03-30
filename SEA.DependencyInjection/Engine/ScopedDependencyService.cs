@@ -7,15 +7,22 @@ namespace SEA.DependencyInjection.Engine
 {
     internal class ScopedDependencyService : IScopedDependencyService
     {
+        private readonly ResolutionContext _resolutionContext;
         private List<ServiceInstance> _transientServices = new();
-        private DependencyService _parent;
         private bool _isDisposed;
 
         internal Cache<ServiceInfo, ServiceInstance> ServiceCache { get; } = new();
 
         internal ScopedDependencyService(DependencyService parent)
         {
-            _parent = parent;
+            _resolutionContext = new()
+            {
+                AutoDetectedServiceInfoCache = parent.AutoDetectedServiceInfoCache,
+                DependencyResolver = this,
+                ScopedServiceCache = ServiceCache,
+                Settings = parent.Settings,
+                SingletonServiceCache = parent.ServiceCache
+            };
         }
 
         public TDependency Get<TDependency>()
@@ -25,7 +32,7 @@ namespace SEA.DependencyInjection.Engine
                 throw new ObjectDisposedException(nameof(ScopedDependencyService));
             }
 
-            return DependencyResolveHelper.ResolveObject<TDependency>(this, _parent.Settings, _parent.ServiceCache, ServiceCache, _parent.AutoDetectedServiceInfoCache);
+            return DependencyResolveHelper.ResolveObject<TDependency>(_resolutionContext);
         }
 
         public object Get(Type dependencyType)
@@ -35,7 +42,7 @@ namespace SEA.DependencyInjection.Engine
                 throw new ObjectDisposedException(nameof(ScopedDependencyService));
             }
 
-            return DependencyResolveHelper.ResolveObject(dependencyType, this, _parent.Settings, _parent.ServiceCache, ServiceCache, _parent.AutoDetectedServiceInfoCache);
+            return DependencyResolveHelper.ResolveObject(dependencyType, _resolutionContext);
         }
 
         public TObject Create<TObject>()
@@ -59,7 +66,6 @@ namespace SEA.DependencyInjection.Engine
                 }
 
                 _transientServices = null;
-                _parent = null;
                 _isDisposed = true;
             }
         }

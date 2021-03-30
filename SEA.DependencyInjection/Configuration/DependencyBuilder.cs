@@ -55,12 +55,11 @@ namespace SEA.DependencyInjection.Configuration
         }
 
         public IDependencyBuilder AddSingleton<TService>()
+            where TService : new()
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Singleton);
-            EnsureConstructableType(typeof(TService));
-
+            EnsureConstructibleType(typeof(TService));
             _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TService), ServiceScope.Singleton, null, null));
-
             return this;
         }
 
@@ -68,10 +67,8 @@ namespace SEA.DependencyInjection.Configuration
             where TImplementation : TService, new()
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Singleton);
-            EnsureConstructableType(typeof(TImplementation));
-
+            EnsureConstructibleType(typeof(TImplementation));
             _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TImplementation), ServiceScope.Singleton, null, null));
-
             return this;
         }
 
@@ -83,12 +80,11 @@ namespace SEA.DependencyInjection.Configuration
         }
 
         public IDependencyBuilder AddScoped<TService>()
+            where TService : new()
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Scoped);
-            EnsureConstructableType(typeof(TService));
-
+            EnsureConstructibleType(typeof(TService));
             _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TService), ServiceScope.Scoped, null, null));
-
             return this;
         }
 
@@ -96,10 +92,8 @@ namespace SEA.DependencyInjection.Configuration
             where TImplementation : TService, new()
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Scoped);
-            EnsureConstructableType(typeof(TImplementation));
-
+            EnsureConstructibleType(typeof(TImplementation));
             _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TImplementation), ServiceScope.Scoped, null, null));
-
             return this;
         }
 
@@ -111,12 +105,11 @@ namespace SEA.DependencyInjection.Configuration
         }
 
         public IDependencyBuilder AddTransient<TService>()
+            where TService : new()
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Transient);
-            EnsureConstructableType(typeof(TService));
-
+            EnsureConstructibleType(typeof(TService));
             _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TService), ServiceScope.Transient, null, null));
-
             return this;
         }
 
@@ -124,10 +117,8 @@ namespace SEA.DependencyInjection.Configuration
             where TImplementation : TService, new()
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Transient);
-            EnsureConstructableType(typeof(TImplementation));
-
+            EnsureConstructibleType(typeof(TImplementation));
             _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TImplementation), ServiceScope.Transient, null, null));
-
             return this;
         }
 
@@ -150,7 +141,7 @@ namespace SEA.DependencyInjection.Configuration
 
         private void EnsureUniqueService(Type type, ServiceScope lifetime)
         {
-            var conflictingService = _serviceInfos.FirstOrDefault(x => x.ImplementationTypeInfo.Type == type);
+            var conflictingService = _serviceInfos.FirstOrDefault(x => x.ServiceType == type);
 
             if (conflictingService != null)
             {
@@ -170,7 +161,7 @@ namespace SEA.DependencyInjection.Configuration
             }
         }
 
-        private static void EnsureConstructableType(Type type)
+        private static void EnsureConstructibleType(Type type)
         {
             if (type.IsAbstract || type.IsInterface)
             {

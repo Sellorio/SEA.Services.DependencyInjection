@@ -12,15 +12,15 @@ namespace SEA.DependencyInjection.Configuration
 
         IDependencyBuilder AddServices(IServiceCollection services);
 
-        IDependencyBuilder AddSingleton<TService>();
+        IDependencyBuilder AddSingleton<TService>() where TService : new();
         IDependencyBuilder AddSingleton<TService, TImplementation>() where TImplementation : TService, new();
         IDependencyBuilder AddSingleton<TService>(TService instance);
 
-        IDependencyBuilder AddScoped<TService>();
+        IDependencyBuilder AddScoped<TService>() where TService : new();
         IDependencyBuilder AddScoped<TService, TImplementation>() where TImplementation : TService, new();
         IDependencyBuilder AddScoped<TService>(Func<IDependencyResolver, TService> serviceBuilder);
 
-        IDependencyBuilder AddTransient<TService>();
+        IDependencyBuilder AddTransient<TService>() where TService : new();
         IDependencyBuilder AddTransient<TService, TImplementation>() where TImplementation : TService, new();
         IDependencyBuilder AddTransient<TService>(Func<IDependencyResolver, TService> serviceBuilder);
 

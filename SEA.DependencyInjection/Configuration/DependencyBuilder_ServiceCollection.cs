@@ -35,7 +35,7 @@ namespace SEA.DependencyInjection.Configuration
 
             if (item.ImplementationInstance == null && item.ImplementationFactory == null)
             {
-                EnsureConstructableType(item.ImplementationType);
+                EnsureConstructibleType(item.ImplementationType);
             }
 
             _serviceInfos.Insert(index, ToServiceInfo(item));
@@ -52,7 +52,7 @@ namespace SEA.DependencyInjection.Configuration
 
             if (item.ImplementationInstance == null && item.ImplementationFactory == null)
             {
-                EnsureConstructableType(item.ImplementationType);
+                EnsureConstructibleType(item.ImplementationType);
             }
 
             _serviceInfos.Add(ToServiceInfo(item));

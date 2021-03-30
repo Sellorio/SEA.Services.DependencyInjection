@@ -6,7 +6,7 @@ namespace SEA.DependencyInjection.Reflection
 {
     internal static class AutoDetectedServiceInfo
     {
-        internal static ServiceTypeInfo Find(Type expectedType, DependencyResolutionSettings settings)
+        internal static ServiceInfo Find(Type expectedType, ServiceScope serviceScope, DependencyResolutionSettings settings)
         {
             if (!settings.IsServiceAutoDetectionEnabled)
             {
@@ -20,7 +20,7 @@ namespace SEA.DependencyInjection.Reflection
                     .Where(x => !x.IsAbstract && !x.IsInterface && x.GetConstructors().Any(x => x.GetParameters().Length == 0))
                     .ToList();
 
-            if (implementations.Count > 0)
+            if (implementations.Count > 1)
             {
                 throw new InvalidOperationException(
                     $"Attempted to auto detect service implementation for {expectedType.Name} but multiple types were matched ({string.Join(", ", implementations.Select(x => x.Name))}).");
@@ -31,7 +31,7 @@ namespace SEA.DependencyInjection.Reflection
                 throw new InvalidOperationException($"Attempted to auto detect service implementation for {expectedType.Name} but no types were matched.");
             }
 
-            return ServiceTypeInfo.Get(implementations[0]);
+            return new ServiceInfo(expectedType, implementations[0], serviceScope, null, null);
         }
     }
 }

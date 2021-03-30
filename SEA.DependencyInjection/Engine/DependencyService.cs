@@ -1,5 +1,4 @@
 ﻿using SEA.DependencyInjection.Configuration;
-using SEA.DependencyInjection.Reflection;
 using SEA.DependencyInjection.Utility;
 using System;
 
@@ -8,14 +7,23 @@ namespace SEA.DependencyInjection.Engine
     internal class DependencyService : IDependencyService
     {
         private bool _isDisposed;
+        private readonly ResolutionContext _resolutionContext;
 
         internal Cache<ServiceInfo, ServiceInstance> ServiceCache { get; } = new();
-        internal Cache<Type, ServiceTypeInfo> AutoDetectedServiceInfoCache = new();
+        internal Cache<Type, ServiceInfo> AutoDetectedServiceInfoCache = new();
         internal DependencyResolutionSettings Settings { get; }
 
         internal DependencyService(DependencyResolutionSettings settings)
         {
             Settings = settings;
+            _resolutionContext = new()
+            {
+                AutoDetectedServiceInfoCache = AutoDetectedServiceInfoCache,
+                DependencyResolver = this,
+                ScopedServiceCache = null,
+                Settings = Settings,
+                SingletonServiceCache = ServiceCache
+            };
         }
 
         public TDependency Get<TDependency>()
@@ -25,7 +33,7 @@ namespace SEA.DependencyInjection.Engine
                 throw new ObjectDisposedException(nameof(ScopedDependencyService));
             }
 
-            return DependencyResolveHelper.ResolveObject<TDependency>(this, Settings, ServiceCache, null, AutoDetectedServiceInfoCache);
+            return DependencyResolveHelper.ResolveObject<TDependency>(_resolutionContext);
         }
 
         public object Get(Type dependencyType)
@@ -35,7 +43,7 @@ namespace SEA.DependencyInjection.Engine
                 throw new ObjectDisposedException(nameof(ScopedDependencyService));
             }
 
-            return DependencyResolveHelper.ResolveObject(dependencyType, this, Settings, ServiceCache, null, AutoDetectedServiceInfoCache);
+            return DependencyResolveHelper.ResolveObject(dependencyType, _resolutionContext);
         }
 
         public TObject Create<TObject>()

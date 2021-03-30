@@ -10,7 +10,7 @@ namespace SEA.DependencyInjection.Reflection
             return type.GetConstructors().Any(x => x.GetParameters().Length == 0);
         }
 
-        public static bool IsConstructable(this Type type)
+        public static bool IsConstructible(this Type type)
         {
             return !type.IsAbstract && !type.IsInterface;
         }
