@@ -1,7 +1,6 @@
 ﻿using SEA.DependencyInjection.Engine;
 using SEA.DependencyInjection.Reflection;
 using System;
-using System.Linq;
 
 namespace SEA.DependencyInjection.Configuration
 {
@@ -38,7 +37,13 @@ namespace SEA.DependencyInjection.Configuration
         /// </summary>
         internal Func<IDependencyResolver, object> CreationFunction { get; }
 
-        internal ServiceInfo(Type serviceType, Type implementationType, ServiceScope scope, object instance, Func<IDependencyResolver, object> creationFunction)
+        /// <summary>
+        /// How services are injected into the service. Defaults to only using init properties. Can be changed to use
+        /// constructor parameters either exclusively or in addition to properties.
+        /// </summary>
+        internal InjectionMode InjectionMode { get; }
+
+        internal ServiceInfo(Type serviceType, Type implementationType, ServiceScope scope, object instance, Func<IDependencyResolver, object> creationFunction, InjectionMode injectionMode)
         {
             ServiceType = serviceType;
 
@@ -50,6 +55,7 @@ namespace SEA.DependencyInjection.Configuration
             Scope = scope;
             Instance = instance;
             CreationFunction = creationFunction;
+            InjectionMode = injectionMode;
         }
     }
 }

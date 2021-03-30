@@ -37,6 +37,16 @@ namespace SEA.DependencyInjection.Tests.TestServices
             public IUniqueSecond UniqueSecond { get; init; }
         }
 
+        public class RequiresSecondInConstructor : IFirst
+        {
+            public ISecond Second { get; }
+
+            public RequiresSecondInConstructor(ISecond second)
+            {
+                Second = second;
+            }
+        }
+
         public class RequiresSecondAndThird : IFirst
         {
             public ISecond Second { get; init; }

@@ -31,7 +31,7 @@ namespace SEA.DependencyInjection.Reflection
                 throw new InvalidOperationException($"Attempted to auto detect service implementation for {expectedType.Name} but no types were matched.");
             }
 
-            return new ServiceInfo(expectedType, implementations[0], serviceScope, null, null);
+            return new ServiceInfo(expectedType, implementations[0], serviceScope, null, null, InjectionMode.Property);
         }
     }
 }

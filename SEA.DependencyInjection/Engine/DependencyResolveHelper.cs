@@ -105,7 +105,10 @@ namespace SEA.DependencyInjection.Engine
                     .Select(x => ResolveObject(x.PropertyType, resolutionContext, ownerScope, newTypeResolutionChain))
                     .ToArray();
 
-            var rawInstance = Activator.CreateInstance(implementationTypeInfo.Type);
+            var rawInstance =
+                serviceInfo.InjectionMode == InjectionMode.Property
+                    ? Activator.CreateInstance(implementationTypeInfo.Type)
+                    : CreateInstanceWithConstructor(implementationTypeInfo.Type, resolutionContext, ownerScope, newTypeResolutionChain);
 
             for (var i = 0; i < dependencies.Length; i++)
             {
@@ -115,6 +118,15 @@ namespace SEA.DependencyInjection.Engine
             var instance = new ServiceInstance(serviceInfo, rawInstance);
 
             return instance;
+        }
+
+        private static object CreateInstanceWithConstructor(Type type, ResolutionContext resolutionContext, ServiceScope ownerScope, IEnumerable<Type> newTypeResolutionChain)
+        {
+            var constructor = type.GetConstructors().OrderBy(x => x.GetParameters().Length).First();
+            var parameters = constructor.GetParameters();
+            var arguments = parameters.Select(x => ResolveObject(x.ParameterType, resolutionContext, ownerScope, newTypeResolutionChain)).ToArray();
+
+            return Activator.CreateInstance(type, arguments);
         }
     }
 }

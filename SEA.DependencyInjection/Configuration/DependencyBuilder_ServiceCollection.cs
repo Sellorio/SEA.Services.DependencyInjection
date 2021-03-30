@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using SEA.DependencyInjection.Engine;
+using SEA.DependencyInjection.Reflection;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -33,9 +34,9 @@ namespace SEA.DependencyInjection.Configuration
         {
             EnsureUniqueService(item.ServiceType, Enum.Parse<ServiceScope>(item.Lifetime.ToString()));
 
-            if (item.ImplementationInstance == null && item.ImplementationFactory == null)
+            if (item.ImplementationInstance == null && item.ImplementationFactory == null && (item.ImplementationType.IsAbstract || item.ImplementationType.IsInterface))
             {
-                EnsureConstructibleType(item.ImplementationType);
+                throw new ArgumentException("The specified type must be a constructible type in order to use it as the implementation type of a service.");
             }
 
             _serviceInfos.Insert(index, ToServiceInfo(item));
@@ -50,9 +51,9 @@ namespace SEA.DependencyInjection.Configuration
         {
             EnsureUniqueService(item.ServiceType, Enum.Parse<ServiceScope>(item.Lifetime.ToString()));
 
-            if (item.ImplementationInstance == null && item.ImplementationFactory == null)
+            if (item.ImplementationInstance == null && item.ImplementationFactory == null && (item.ImplementationType.IsAbstract || item.ImplementationType.IsInterface))
             {
-                EnsureConstructibleType(item.ImplementationType);
+                throw new ArgumentException("The specified type must be a constructible type in order to use it as the implementation type of a service.");
             }
 
             _serviceInfos.Add(ToServiceInfo(item));
@@ -138,7 +139,8 @@ namespace SEA.DependencyInjection.Configuration
                         serviceDescriptor.ImplementationInstance.GetType(),
                         Enum.Parse<ServiceScope>(serviceDescriptor.Lifetime.ToString()),
                         serviceDescriptor.ImplementationInstance,
-                        null);
+                        null,
+                        InjectionMode.Property);
             }
 
             if (serviceDescriptor.ImplementationFactory != null)
@@ -149,7 +151,8 @@ namespace SEA.DependencyInjection.Configuration
                         null,
                         Enum.Parse<ServiceScope>(serviceDescriptor.Lifetime.ToString()),
                         null,
-                        serviceDescriptor.ImplementationFactory);
+                        serviceDescriptor.ImplementationFactory,
+                        InjectionMode.Property);
             }
 
             return
@@ -158,7 +161,8 @@ namespace SEA.DependencyInjection.Configuration
                     serviceDescriptor.ImplementationType,
                     Enum.Parse<ServiceScope>(serviceDescriptor.Lifetime.ToString()),
                     null,
-                    null);
+                    null,
+                    serviceDescriptor.ImplementationType.HasEmptyConstructor() ? InjectionMode.Property : InjectionMode.Constructor);
         }
     }
 }

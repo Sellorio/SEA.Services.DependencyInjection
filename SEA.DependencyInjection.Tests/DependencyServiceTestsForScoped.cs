@@ -290,6 +290,22 @@ namespace SEA.DependencyInjection.Tests
         }
 
         [Fact]
+        public void Get_Success_ConstructorCompatabilityMode()
+        {
+            var dependencyBuilder = (IDependencyBuilder)new DependencyBuilder();
+            dependencyBuilder.Add(new Microsoft.Extensions.DependencyInjection.ServiceDescriptor(typeof(IFirst), typeof(First.RequiresSecondInConstructor), Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped));
+            dependencyBuilder.AddScoped<ISecond, Second.RequiresNone>();
+            var dependencyService = dependencyBuilder.Build().CreateScope();
+
+            var service = dependencyService.Get<IFirst>();
+
+            Assert.NotNull(service);
+            var first = Assert.IsType<First.RequiresSecondInConstructor>(service);
+            Assert.NotNull(first.Second);
+            Assert.IsType<Second.RequiresNone>(first.Second);
+        }
+
+        [Fact]
         public void Dispose_Success_DisposableScoped()
         {
             var dependencyService =
@@ -324,6 +340,34 @@ namespace SEA.DependencyInjection.Tests
             first.Dispose();
 
             dependencyService.Dispose();
+        }
+
+        [Fact]
+        public void Create_Standard()
+        {
+            var dependencyService =
+                new DependencyBuilder()
+                    .AddScoped<ISecond, Second.RequiresNone>()
+                    .Build().CreateScope();
+
+            var service = dependencyService.Create<First.RequiresSecond>();
+
+            Assert.NotNull(service);
+            var first = Assert.IsType<First.RequiresSecond>(service);
+            Assert.NotNull(first.Second);
+            Assert.IsType<Second.RequiresNone>(first.Second);
+        }
+
+        [Fact]
+        public void Create_AutoDetect()
+        {
+            var dependencyService = new DependencyBuilder().EnableServiceAutoDetection(GetType().Assembly).Build().CreateScope();
+            var service = dependencyService.Create<First.RequiresUniqueSecond>();
+
+            Assert.NotNull(service);
+            var first = Assert.IsType<First.RequiresUniqueSecond>(service);
+            Assert.NotNull(first.UniqueSecond);
+            Assert.IsType<Second.RequiresNone>(first.UniqueSecond);
         }
     }
 }

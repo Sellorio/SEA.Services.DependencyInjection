@@ -1,8 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using SEA.DependencyInjection.Engine;
-using SEA.DependencyInjection.Reflection;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -59,7 +57,7 @@ namespace SEA.DependencyInjection.Configuration
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Singleton);
             EnsureConstructibleType(typeof(TService));
-            _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TService), ServiceScope.Singleton, null, null));
+            _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TService), ServiceScope.Singleton, null, null, InjectionMode.Property));
             return this;
         }
 
@@ -68,14 +66,14 @@ namespace SEA.DependencyInjection.Configuration
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Singleton);
             EnsureConstructibleType(typeof(TImplementation));
-            _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TImplementation), ServiceScope.Singleton, null, null));
+            _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TImplementation), ServiceScope.Singleton, null, null, InjectionMode.Property));
             return this;
         }
 
         public IDependencyBuilder AddSingleton<TService>(TService instance)
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Singleton);
-            _serviceInfos.Add(new ServiceInfo(typeof(TService), instance.GetType(), ServiceScope.Singleton, instance, null));
+            _serviceInfos.Add(new ServiceInfo(typeof(TService), instance.GetType(), ServiceScope.Singleton, instance, null, InjectionMode.Property));
             return this;
         }
 
@@ -84,7 +82,7 @@ namespace SEA.DependencyInjection.Configuration
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Scoped);
             EnsureConstructibleType(typeof(TService));
-            _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TService), ServiceScope.Scoped, null, null));
+            _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TService), ServiceScope.Scoped, null, null, InjectionMode.Property));
             return this;
         }
 
@@ -93,14 +91,14 @@ namespace SEA.DependencyInjection.Configuration
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Scoped);
             EnsureConstructibleType(typeof(TImplementation));
-            _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TImplementation), ServiceScope.Scoped, null, null));
+            _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TImplementation), ServiceScope.Scoped, null, null, InjectionMode.Property));
             return this;
         }
 
         public IDependencyBuilder AddScoped<TService>(Func<IDependencyResolver, TService> serviceBuilder)
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Scoped);
-            _serviceInfos.Add(new ServiceInfo(typeof(TService), null, ServiceScope.Scoped, null, x => serviceBuilder.Invoke(x)));
+            _serviceInfos.Add(new ServiceInfo(typeof(TService), null, ServiceScope.Scoped, null, x => serviceBuilder.Invoke(x), InjectionMode.Property));
             return this;
         }
 
@@ -109,7 +107,7 @@ namespace SEA.DependencyInjection.Configuration
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Transient);
             EnsureConstructibleType(typeof(TService));
-            _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TService), ServiceScope.Transient, null, null));
+            _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TService), ServiceScope.Transient, null, null, InjectionMode.Property));
             return this;
         }
 
@@ -118,14 +116,14 @@ namespace SEA.DependencyInjection.Configuration
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Transient);
             EnsureConstructibleType(typeof(TImplementation));
-            _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TImplementation), ServiceScope.Transient, null, null));
+            _serviceInfos.Add(new ServiceInfo(typeof(TService), typeof(TImplementation), ServiceScope.Transient, null, null, InjectionMode.Property));
             return this;
         }
 
         public IDependencyBuilder AddTransient<TService>(Func<IDependencyResolver, TService> serviceBuilder)
         {
             EnsureUniqueService(typeof(TService), ServiceScope.Transient);
-            _serviceInfos.Add(new ServiceInfo(typeof(TService), null, ServiceScope.Transient, null, x => serviceBuilder.Invoke(x)));
+            _serviceInfos.Add(new ServiceInfo(typeof(TService), null, ServiceScope.Transient, null, x => serviceBuilder.Invoke(x), InjectionMode.Property));
             return this;
         }
 
