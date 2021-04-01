@@ -1,0 +1,44 @@
+name: .NET
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The version to use for the NuGet Package.
+        required: true
+        default: '0.0.0'
+      deploy:
+        description: Whether or not to deploy the package.
+        required: true
+        default: 'false'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+    - name: Setup NuGet.exe for use with actions
+      uses: NuGet/setup-nuget@v1.0.5
+      with:
+        nuget-version: latest
+        nuget-api-key: ${{ secrets.NUGETAPIKEY }}
+    - name: Restore
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+    - name: Package
+      run: |
+        nuget pack SEA.Services.DependencyInjection/SEA.Services.DependencyInjection.csproj \
+          -version ${{ github.event.inputs.version }}
+    - name: Deploy
+      if: ${{ github.event.inputs.deploy == 'true' }}
+      run: |
+        nuget push \
+          SEA.Services.DependencyInjection.${{ github.event.inputs.version }}.nupkg \
+          -Source https://api.nuget.org/v3/index.json

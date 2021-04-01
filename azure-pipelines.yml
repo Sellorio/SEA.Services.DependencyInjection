@@ -1,0 +1,33 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- task: NuGetToolInstaller@1
+  inputs:
+    versionSpec: 
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: 'SEA.DependencyInjection/SEA.DependencyInjection.csproj'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'test'
+    projects: 'SEA.DependencyInjection.Tests/SEA.DependencyInjection.Tests.csproj'
+- task: NuGetCommand@2
+  inputs:
+    command: 'pack'
+    packagesToPack: 'SEA.DependencyInjection/SEA.DependencyInjection.csproj'
+    packDestination: 'SEA.DependencyInjection'
+    versioningScheme: 'byEnvVar'
+    versionEnvVar: 'version'
+- task: NuGetCommand@2
+  inputs:
+    command: 'push'
+    packagesToPush: '**/*.nupkg'
+    nuGetFeedType: 'external'
+    publishFeedCredentials: 'NuGet'

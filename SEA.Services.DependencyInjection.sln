@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31112.23
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SEA.DependencyInjection", "SEA.DependencyInjection\SEA.DependencyInjection.csproj", "{DA5984A4-60C7-4099-967B-4E07E78BBEFB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SEA.Services.DependencyInjection", "SEA.Services.DependencyInjection\SEA.Services.DependencyInjection.csproj", "{DA5984A4-60C7-4099-967B-4E07E78BBEFB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SEA.Services.DependencyInjection.Tests", "SEA.Services.DependencyInjection.Tests\SEA.Services.DependencyInjection.Tests.csproj", "{AF9B22A2-C2F1-4A7E-ADA0-F88544BD2925}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{DA5984A4-60C7-4099-967B-4E07E78BBEFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA5984A4-60C7-4099-967B-4E07E78BBEFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA5984A4-60C7-4099-967B-4E07E78BBEFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF9B22A2-C2F1-4A7E-ADA0-F88544BD2925}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF9B22A2-C2F1-4A7E-ADA0-F88544BD2925}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF9B22A2-C2F1-4A7E-ADA0-F88544BD2925}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF9B22A2-C2F1-4A7E-ADA0-F88544BD2925}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
